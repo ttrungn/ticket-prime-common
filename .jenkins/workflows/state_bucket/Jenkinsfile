@@ -25,9 +25,9 @@ pipeline {
         }
 
         stage('Terraform Bootstrap') {
-            when {
-                changeset '**/terraform/bucket_state/**'
-            }
+            // when {
+            //     changeset '**/terraform/bucket_state/**'
+            // }
             steps {
                 dir('terraform/dev/bootstrap') {
                     echo 'INFO: Starting Terraform bootstrap process...'
