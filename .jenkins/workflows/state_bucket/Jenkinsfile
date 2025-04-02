@@ -5,6 +5,10 @@ pipeline {
         git 'Default'
     }
 
+    parameters {
+        string(name: 'current_branch', defaultValue: 'random_branch_to_raise_an_error', description: 'The current branch')
+    }
+
     environment {
         // AWS credentials injected from Jenkins credentials store
         AWS_ACCESS_KEY_ID     = credentials('TP_FE_AWS_ACCESS_KEY_ID')
@@ -13,13 +17,17 @@ pipeline {
         // Terraform variables as environment variables
         TF_VAR_aws_region            = credentials('TP_AWS_REGION_SINGAPORE')
         TF_VAR_state_bucket_name     = credentials('TP_AWS_TF_STATE_BUCKET')
+
+        // Common variables
+        GIT_BRANCH = "${params.current_branch}"
     }
-    stages{
+
+    stages {
         stage('Checkout') {
             steps {
-                echo 'INFO: Starting source code checkout from Git repository (dev branch)...'
+                echo "INFO: Starting source code checkout (${GIT_BRANCH} branch)..."
                 git url: 'https://github.com/ttrungn/ticket-prime-common.git',
-                    branch: 'dev'
+                    branch: "${GIT_BRANCH}"
                 echo 'INFO: Git checkout completed successfully.'
             }
         }
@@ -72,3 +80,4 @@ pipeline {
         }
     }
 }
+
