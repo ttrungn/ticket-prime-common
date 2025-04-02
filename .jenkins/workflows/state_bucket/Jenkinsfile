@@ -21,12 +21,13 @@ pipeline {
         // Common variables
         GIT_BRANCH = "${params.current_branch}"
     }
-    stages{
+
+    stages {
         stage('Checkout') {
             steps {
-                echo 'INFO: Starting source code checkout ($GIT_BRANCH branch)...'
+                echo "INFO: Starting source code checkout (${GIT_BRANCH} branch)..."
                 git url: 'https://github.com/ttrungn/ticket-prime-common.git',
-                    branch: '$GIT_BRANCH'
+                    branch: "${GIT_BRANCH}"
                 echo 'INFO: Git checkout completed successfully.'
             }
         }
@@ -79,3 +80,4 @@ pipeline {
         }
     }
 }
+
