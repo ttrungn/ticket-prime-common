@@ -29,7 +29,7 @@ pipeline {
             //     changeset '**/terraform/bucket_state/**'
             // }
             steps {
-                dir('terraform/dev/bootstrap') {
+                dir('terraform/state_bucket') {
                     echo 'INFO: Starting Terraform bootstrap process...'
 
                     sh '''
