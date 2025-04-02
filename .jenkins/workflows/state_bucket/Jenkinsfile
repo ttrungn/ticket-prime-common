@@ -1,0 +1,74 @@
+pipeline {
+    agent any
+
+    tools {
+        git 'Default'
+    }
+
+    environment {
+        // AWS credentials injected from Jenkins credentials store
+        AWS_ACCESS_KEY_ID     = credentials('TP_FE_AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('TP_FE_AWS_SECRET_KEY')
+
+        // Terraform variables as environment variables
+        TF_VAR_aws_region            = credentials('TP_AWS_REGION_SINGAPORE')
+        TF_VAR_state_bucket_name     = credentials('TP_AWS_TF_STATE_BUCKET')
+    }
+    stages{
+        stage('Checkout') {
+            steps {
+                echo 'INFO: Starting source code checkout from Git repository (dev branch)...'
+                git url: 'https://github.com/ttrungn/ticket-prime-common.git',
+                    branch: 'dev'
+                echo 'INFO: Git checkout completed successfully.'
+            }
+        }
+
+        stage('Terraform Bootstrap') {
+            // when {
+            //     changeset '**/terraform/bucket_state/**'
+            // }
+            steps {
+                dir('terraform/state_bucket') {
+                    echo 'INFO: Starting Terraform bootstrap process...'
+
+                    sh '''
+                        set -e
+
+                        echo "INFO: Initializing Terraform..."
+                        terraform init -input=false
+
+                        echo "INFO: Checking if S3 bucket '${TF_VAR_state_bucket_name}' exists..."
+                        if aws s3api head-bucket --bucket "${TF_VAR_state_bucket_name}" 2>/dev/null; then
+                            echo "INFO: S3 bucket exists. Importing resources into Terraform state if needed..."
+
+                            if ! terraform state list | grep -q 'aws_s3_bucket.state_bucket'; then
+                                terraform import aws_s3_bucket.state_bucket "${TF_VAR_state_bucket_name}"
+                            fi
+
+                            if ! terraform state list | \
+                                grep -q 'aws_s3_bucket_versioning.state_bucket_versioning'; then
+                                terraform import aws_s3_bucket_versioning.state_bucket_versioning \
+                                    "${TF_VAR_state_bucket_name}"
+                            fi
+
+                            if ! terraform state list | \
+                                grep -q 'aws_s3_bucket_public_access_block.state_bucket_block'; then
+                                terraform import aws_s3_bucket_public_access_block.state_bucket_block \
+                                    "${TF_VAR_state_bucket_name}"
+                            fi
+                        else
+                            echo "INFO: S3 bucket does not exist. Terraform will create it."
+                        fi
+
+                        echo "INFO: Running Terraform plan and apply..."
+                        terraform plan -input=false -out=tfplan
+                        terraform apply -input=false tfplan
+                    '''
+
+                    echo 'INFO: Terraform bootstrap stage completed.'
+                }
+            }
+        }
+    }
+}
