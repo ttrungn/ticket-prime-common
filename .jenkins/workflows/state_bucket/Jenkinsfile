@@ -53,12 +53,6 @@ pipeline {
                             fi
 
                             if ! terraform state list | \
-                                grep -q 'aws_s3_bucket_lifecycle_configuration.state_bucket_lifecycle_config'; then
-                                terraform import aws_s3_bucket_lifecycle_configuration.state_bucket_lifecycle_config \
-                                    "${TF_VAR_state_bucket_name}"
-                            fi
-
-                            if ! terraform state list | \
                                 grep -q 'aws_s3_bucket_public_access_block.state_bucket_block'; then
                                 terraform import aws_s3_bucket_public_access_block.state_bucket_block \
                                     "${TF_VAR_state_bucket_name}"
