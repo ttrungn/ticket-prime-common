@@ -6,7 +6,11 @@ pipeline {
     }
 
     parameters {
-        string(name: 'current_branch', defaultValue: 'random_branch_to_raise_an_error', description: 'The current branch')
+        string(
+            name: 'current_branch',
+            defaultValue: 'random_branch_to_raise_an_error',
+            description: 'The current branch'
+        )
     }
 
     environment {
